@@ -3,11 +3,12 @@
             [compojure.route :as route]
             [yaml.core :as yaml]
             [clj-sparql.core :as sparql]
+            [clj-http.client :as client]
             [clojure.java.io :as io]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]
              ]))
 
-(def photons-yml "/photon/photon.yml")
+(def photons-yml "/photon/photon.yml")  
 
 (def files-location "/home/jonathan/Downloads/files/")
 
@@ -41,14 +42,56 @@
     (.println (System/out) "loading photons...")
     (load-photons)
     (.println (System/out) photons)
-    ;; (reset-database)
     ))
 
+;;; TESTING
+
+(defn perform-test-call [reduction call]
+  (do
+    (.println (System/out) (str "reduction: " reduction))
+    (.println (System/out) (call "route"))
+    (str reduction (call "route"))))
+
+(defn perform-call [url method mutations response-code response-text]
+  (let [response (client/get url)
+        code (response :status)
+        text (response :body)]
+    (.println (System/out) response)
+    (.println (System/out) (str "expecting... " response-code " ... got ... " code))
+    (.println (System/out) (str "expecting... " response-text " ... got ... " text))
+    (if (and (= code response-code) (= text response-text))
+      (str "call with url: " url " succeedded")
+      (str "[!] call with url: " url " FAILED!"))))
+
+(defn reduce-tests [reduction test]
+  (str reduction " " test))
+
+(defn perform-test [call]
+  (do 
+    (.println (System/out) call)
+    (let [callConfig (call (first (keys call)))
+          route (callConfig "route")
+          url (str "http://localhost/app" route)
+          method (callConfig "method")
+          mutations (callConfig "mutations")
+          response (callConfig "response")
+          response-code (response "code")
+          response-text (response "text")]
+      (reset-database)
+      (perform-call url method mutations response-code response-text))))
+
 (defn perform-tests []
-  (str "all tests succeedded"))
+  (do
+    (reduce reduce-tests (map perform-test (photons "photons")))))
+
+
+;;; WEB APP
 
 (defroutes app-routes
   (GET "/" [] (perform-tests))
+  (GET "/test" [] (do
+                    (.println (System/out)(client/get "http://jsonplaceholder.typicode.com/albums"))
+                    "TEST"))
   (route/not-found "Not Found"))
 
 (def app

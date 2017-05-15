@@ -6,6 +6,7 @@
                  [compojure "1.5.1"]
                  [io.forward/yaml "1.0.6"]
                  [clj-sparql "0.2.0"]
+                 [clj-http "3.5.0"]
                  [ring/ring-defaults "0.2.1"]]
   :plugins [[lein-ring "0.9.7"]]
   :ring {:handler photon.handler/app
