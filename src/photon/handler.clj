@@ -71,7 +71,7 @@
     (.println (System/out) call)
     (let [callConfig (call (first (keys call)))
           route (callConfig "route")
-          url (str "http://localhost/app" route)
+          url (str "http://app" route)
           method (callConfig "method")
           mutations (callConfig "mutations")
           response (callConfig "response")
@@ -89,9 +89,6 @@
 
 (defroutes app-routes
   (GET "/" [] (perform-tests))
-  (GET "/test" [] (do
-                    (.println (System/out)(client/get "http://jsonplaceholder.typicode.com/albums"))
-                    "TEST"))
   (route/not-found "Not Found"))
 
 (def app
